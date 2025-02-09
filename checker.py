@@ -87,8 +87,17 @@ def main():
 
     all_files = get_all_files_recursively(directory_to_analyze)
     for filepath in all_files:
+        
+        if (
+            os.path.basename(filepath).startswith(".") or
+            filepath.endswith((".css", ".json", ".md", ".svg", ".ico", ".mjs", ".gitignore", ".env"))
+            or ".git/" in filepath
+        ):
+            continue
         # Query LLM for this file
+        print(filepath)
         response = analyze_file_with_llm(filepath)
+        print(response)
         if response is None:
             continue  # Skip if there was an error
         analysis_results.append(response)
