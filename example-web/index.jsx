@@ -1,4 +1,3 @@
-// pages/index.js (Next.Js Outdated Example)
 
 import React from 'react';
 import Head from 'next/head';

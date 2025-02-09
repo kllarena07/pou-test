@@ -1,4 +1,5 @@
 import os
+import argparse
 from groq import Groq
 from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
@@ -13,8 +14,8 @@ client = instructor.from_groq(Groq(api_key=os.getenv("GROQ_API_KEY")), mode=inst
 
 class CodeChange(BaseModel):
     path: str
-    code_rewrite: str
-    explanation: str
+    code_content: str
+    reason: str
 
 def get_all_files_recursively(root_directory):
     """
@@ -35,7 +36,7 @@ def analyze_file_with_llm(file_path):
     """
     with open(file_path, 'r', encoding="utf-8", errors="ignore") as f:
         file_content = f.read()
-        # print(file_content)
+
 
     # Create a user prompt for the LLM
     user_prompt = (
@@ -43,8 +44,8 @@ def analyze_file_with_llm(file_path):
         "If it is out of date, specify what changes need to be made in the following JSON format:\n\n"
         "{\n"
         '  "path": "relative/file/path",\n'
-        '  "code_rewrite": "A rewrite of the file that is more up to date, using the native language (i.e. if the file is a Next.Js file, rewrite the Next.js file using Javascript/Typescript with the updated API changes)". The file should be a complete file, not just a partial updated code segment,\n'
-        '  "explanation": "Explanation of why the change is necessary."\n'
+        '  "code_content": "The entire content of the file, before any changes are made. This should be a complete file, not just a partial updated code segment."\n'
+        '  "reason": "A short explanation of why the code is out of date."\n'
         "}\n\n"
         f"{file_content}"
     )
@@ -53,7 +54,10 @@ def analyze_file_with_llm(file_path):
     try:
         chat_completion = client.chat.completions.create(
             model="llama3-8b-8192",
-            messages=[{"role": "system", "content": "You are a helpful assistant that analyzes code and returns a JSON object with the path, code change, and explanation. Your goal is to identify outdated syntax in code and suggest changes to update it to the latest syntax."}, {"role": "user", "content": user_prompt}],
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that analyzes code and returns a JSON object with the path, and raw code content. Your goal is to identify outdated syntax in code and keep track of it."},
+                {"role": "user", "content": user_prompt}
+            ],
             response_model=CodeChange,
         )
         # llm_response = chat_completion.choices[0].message.content
@@ -72,8 +76,11 @@ def analyze_file_with_llm(file_path):
         return None
 
 def main():
-    # Directory you want to recursively analyze
-    directory_to_analyze = "example-web"
+    parser = argparse.ArgumentParser(description="Analyze code files for outdated syntax.")
+    parser.add_argument("directory", type=str, help="Directory to analyze")
+
+    args = parser.parse_args()
+    directory_to_analyze = args.directory
 
     # Store results in a list of CodeChange instances
     analysis_results = []
@@ -91,9 +98,9 @@ def main():
         print("No files were found to be out of date.")
     else:
         for result in analysis_results:
-            print(f"File '{result.path}' is out of date.")
-            print("Suggested Changes:\n", result.code_rewrite)
-            print("Explanation:\n", result.explanation)
+            print(f"File PATH: {result.path}")
+            print(f"File CONTENT: {result.code_content}")
+            print(f"Reason: {result.reason}")
             print("-" * 40)
 
 if __name__ == "__main__":
