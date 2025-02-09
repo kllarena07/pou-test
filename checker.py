@@ -61,7 +61,6 @@ def analyze_file_with_llm(file_path):
             response_model=CodeChange,
         )
         # llm_response = chat_completion.choices[0].message.content
-        print(chat_completion)
         
         # Convert the LLM response to a dictionary before creating the CodeChange instance
         # code_change_data = json.loads(chat_completion)
@@ -95,9 +94,8 @@ def main():
         ):
             continue
         # Query LLM for this file
-        print(filepath)
+
         response = analyze_file_with_llm(filepath)
-        print(response)
         if response is None:
             continue  # Skip if there was an error
         analysis_results.append(response)
@@ -106,11 +104,7 @@ def main():
     if not analysis_results:
         print("No files were found to be out of date.")
     else:
-        for result in analysis_results:
-            print(f"File PATH: {result.path}")
-            print(f"File CONTENT: {result.code_content}")
-            print(f"Reason: {result.reason}")
-            print("-" * 40)
+      print(analysis_results)
 
 if __name__ == "__main__":
     main()
