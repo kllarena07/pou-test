@@ -98,13 +98,23 @@ def main():
         response = analyze_file_with_llm(filepath)
         if response is None:
             continue  # Skip if there was an error
+        response.path = filepath
         analysis_results.append(response)
+
+    
 
     # Print out any files that are deemed out of date and their suggested changes
     if not analysis_results:
         print("No files were found to be out of date.")
     else:
-      print(analysis_results)
+        print("=UPDATED=")
+        print(analysis_results)
+
+        # for result in analysis_results:
+        #     print(f"File PATH: {result.path}")
+        #     print(f"File CONTENT: {result.code_content}")
+        #     print(f"Reason: {result.reason}")
+        #     print("-" * 40)
 
 if __name__ == "__main__":
     main()
